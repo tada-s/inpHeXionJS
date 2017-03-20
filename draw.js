@@ -18,9 +18,17 @@ function draw(){
 }
 
 function drawMessage(){
-	ctx.font = "bold 16px Arial";
-	ctx.fillStyle = "rgba(0, 0, 0, 1)";
+	ctx.font = "bold 25px Arial";
+	ctx.lineWidth = 0.8;
+	if(1 <= gameState && gameState <= 6){
+		ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+		ctx.fillStyle = "rgba(230, 230, 230, 1)";
+	}else{
+		ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+		ctx.fillStyle = "rgba(0, 0, 0, 1)";
+	}
 	ctx.fillText(getGameMessage(), 20, 30);
+	ctx.strokeText(getGameMessage(), 20, 30);
 }
 
 function isInHexagon(x, y, hX, hY, size){

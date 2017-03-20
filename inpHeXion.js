@@ -78,21 +78,21 @@ function input(i, j){
 		case STATE_NONE:
 			
 			break;
+		case STATE_WHITE_PLACE:
+			if(board.cell[i][j] == CELL_EMPTY){
+				board.cell[i][j] = CELL_WHITE;
+				gameState = STATE_BLACK_SELECT;
+			}
+			break;
 		case STATE_WHITE_SELECT:
 			if(board.cell[i][j] == CELL_BLACK){
-				board.cell[i][j] = CELL_EMPTY;
+				board.cell[i][j] = CELL_WHITE;
 				gameState = STATE_WHITE_MOVE;
 			}
 			break;
 		case STATE_WHITE_MOVE:
 			if(board.cell[i][j] == CELL_EMPTY){
 				board.cell[i][j] = CELL_BLACK;
-				gameState = STATE_WHITE_PLACE;
-			}
-			break;
-		case STATE_WHITE_PLACE:
-			if(board.cell[i][j] == CELL_EMPTY){
-				board.cell[i][j] = CELL_WHITE;
 				if(existSurroundedDiscsBy(CELL_WHITE)){
 					gameState = STATE_WHITE_SURROUND_SELECT;
 				}else{
@@ -121,19 +121,13 @@ function input(i, j){
 			break;
 		case STATE_BLACK_SELECT:
 			if(board.cell[i][j] == CELL_WHITE){
-				board.cell[i][j] = CELL_EMPTY;
+				board.cell[i][j] = CELL_BLACK;
 				gameState = STATE_BLACK_MOVE;
 			}
 			break;
 		case STATE_BLACK_MOVE:
 			if(board.cell[i][j] == CELL_EMPTY){
 				board.cell[i][j] = CELL_WHITE;
-				gameState = STATE_BLACK_PLACE;
-			}
-			break;
-		case STATE_BLACK_PLACE:
-			if(board.cell[i][j] == CELL_EMPTY){
-				board.cell[i][j] = CELL_BLACK;
 				if(existSurroundedDiscsBy(CELL_BLACK)){
 					gameState = STATE_BLACK_SURROUND_SELECT;
 				}else{
