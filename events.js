@@ -26,20 +26,22 @@ function setEventMouseMove(flag){
 
 function internalEventMouseMove(evt){
 	var rect = events_docElement.getBoundingClientRect();
+	scaleX = canvas.width / rect.width,
+	scaleY = canvas.height / rect.height;
 	lastMouse.x = mouse.x;
 	lastMouse.y = mouse.y;
-	mouse.x = evt.clientX - rect.left;
-	mouse.y = evt.clientY - rect.top;
-	eventMouseMove();
+	mouse.x = (evt.clientX - rect.left) * scaleX;
+	mouse.y = (evt.clientY - rect.top) * scaleY;
+	//eventMouseMove();
 }
 
 // Event MouseDown
 
 function setEventMouseDown(flag){
 	if(flag == true){
-		events.docElement.addEventListener("mousedown", internalEventMouseDown);
+		events_docElement.addEventListener("mousedown", internalEventMouseDown);
 	}else{
-		events.docElement.removeEventListener("mousedown", internalEventMouseDown);
+		events_docElement.removeEventListener("mousedown", internalEventMouseDown);
 	}
 }
 
@@ -51,9 +53,9 @@ function internalEventMouseDown(evt){
 
 function setEventMouseUp(flag){
 	if(flag == true){
-		events.docElement.addEventListener("mouseup", internalEventMouseUp);
+		events_docElement.addEventListener("mouseup", internalEventMouseUp);
 	}else{
-		events.docElement.removeEventListener("mouseup", internalEventMouseUp);
+		events_docElement.removeEventListener("mouseup", internalEventMouseUp);
 	}
 }
 
