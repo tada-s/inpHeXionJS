@@ -1,66 +1,120 @@
-var lastMouse = {
-	x: 0,
-	y: 0
-};
+/* 
+ * This javascript handles the input from web browser events.
+ */
 
+window.onload = eventInitialize;
+
+// Canvas Rectangle Position and Resized Dimension
+var clientCanvasRect;
+// Mouse Corrdinates
 var mouse = {
 	x: 0,
 	y: 0
 };
-
-var events_docElement;
-
-function setupEvents(element){
-	events_docElement = document.getElementById(element);
+//
+var selectedCell = {
+	i: -1,
+	j: -1
+};
+// Dragged disk properties
+var isDiskDragged = false;
+var dragStartCell = {
+	i: -1,
+	j: -1
+};
+var dragStartMouse = {
+	x:-1,
+	y:-1
 }
 
-// Event MouseMove
+/** Event Initialize **/
+function eventInitialize(){
+	var element = document.getElementById("canvasGame");
+	element.addEventListener("mousedown", eventMouseDown);
+	element.addEventListener("mouseup", eventMouseUp);
+	element.addEventListener("mousemove", eventMouseMove);
+	clientCanvasRect = element.getBoundingClientRect();
 
-function setEventMouseMove(flag){
-	if(flag == true){
-		events_docElement.addEventListener("mousemove", internalEventMouseMove);
-	}else{
-		events_docElement.removeEventListener("mousemove", internalEventMouseMove);
+	initCoordinates();
+	initDraw();
+	initBoard();
+
+	draw();
+}
+
+/** Event Mouse Down **/
+function eventMouseDown(evt){
+	updateMouseCoord(evt);
+
+	var cell = getCellFromPosition(mouse);
+	if(cell != null){
+		isDiskDragged = true;
+		dragStartCell = cell;
+		dragStartMouse = mouse;
 	}
+
+	draw();
 }
 
-function internalEventMouseMove(evt){
-	var rect = events_docElement.getBoundingClientRect();
-	scaleX = canvas.width / rect.width,
-	scaleY = canvas.height / rect.height;
-	lastMouse.x = mouse.x;
-	lastMouse.y = mouse.y;
-	mouse.x = (evt.clientX - rect.left) * scaleX;
-	mouse.y = (evt.clientY - rect.top) * scaleY;
-	//eventMouseMove();
-}
+/** Event Mouse Up **/
+function eventMouseUp(evt){
+	updateMouseCoord(evt);
 
-// Event MouseDown
-
-function setEventMouseDown(flag){
-	if(flag == true){
-		events_docElement.addEventListener("mousedown", internalEventMouseDown);
-	}else{
-		events_docElement.removeEventListener("mousedown", internalEventMouseDown);
+	if(isDiskDragged){
+		isDiskDragged = false;
+		var cell = getCellFromPosition(getDraggedDiskPosition());
+		console.log(cell);
+		if(cell != null){
+			input(dragStartCell.i, dragStartCell.j, cell.i, cell.j);
+		}
+		selectedCell = cell;
 	}
+
+	draw();
 }
 
-function internalEventMouseDown(evt){
-	eventMouseDown();
-}
+/** Event Mouse Move **/
+function eventMouseMove(evt){
+	updateMouseCoord(evt);
 
-// Event MouseUp
-
-function setEventMouseUp(flag){
-	if(flag == true){
-		events_docElement.addEventListener("mouseup", internalEventMouseUp);
+	var position;
+	if(isDiskDragged){
+		position = getDraggedDiskPosition();
 	}else{
-		events_docElement.removeEventListener("mouseup", internalEventMouseUp);
+		position = mouse;
 	}
+	var cell = getCellFromPosition(position);
+	if(cell != null){
+		selectedCell = cell;
+	}
+
+	draw();
 }
 
-function internalEventMouseUp(evt){
-	eventMouseUp();
+function updateMouseCoord(evt){
+	var m = {x:-1, y:-1};
+	scaleX = canvas.width / clientCanvasRect.width,
+	scaleY = canvas.height / clientCanvasRect.height;
+	m.x = (evt.clientX - clientCanvasRect.left) * scaleX;
+	m.y = (evt.clientY - clientCanvasRect.top) * scaleY;
+	mouse = m;
 }
 
+function getDraggedDiskPosition(){
+	var pos = {x:getCellX(dragStartCell.i, dragStartCell.j) + (mouse.x - dragStartMouse.x), y:getCellY(dragStartCell.j, dragStartCell.j) +  (mouse.y - dragStartMouse.y)};
+	return pos;
+}
+
+function getCellFromPosition(position){
+	for(var i = 0; i < board.cellRow; i++){
+		for(var j = 0; j < board.cellColumn; j++){
+			var x = getCellX(i, j);
+			var y = getCellY(i, j);
+			if(isInHexagon(position.x, position.y, x, y, sizeBoardCell)){
+				return {i: i, j: j};
+			}
+		}
+	}
+	return null;
+}
 
