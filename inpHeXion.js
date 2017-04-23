@@ -10,10 +10,10 @@ const STATE_NONE = 0;
 const STATE_WHITE_MOVE = 2;
 const STATE_WHITE_PLACE = 3;
 const STATE_WHITE_SURROUND_MOVE = 5;
-const STATE_WHITE_WINS = 6;
+const STATE_WHITE_WIN = 6;
 const STATE_BLACK_MOVE = 8;
 const STATE_BLACK_SURROUND_MOVE = 11;
-const STATE_BLACK_WINS = 12;
+const STATE_BLACK_WIN = 12;
 const STATE_DRAW = 13;
 
 const TURN_WHITE = CELL_WHITE;
@@ -32,6 +32,8 @@ var djNeighbor = [0, -1, -1, 0, 1, 1];
 
 var ufdsParent = [];
 
+/** Initialization **/
+
 function initBoard(){
 	board.cell = [];
 	for(var i = 0; i < board.cellRow; i++){
@@ -40,80 +42,18 @@ function initBoard(){
 			board.cell[i].push(CELL_EMPTY);
 		}
 	}
-	//gameState = STATE_NONE;
 	gameState = STATE_WHITE_PLACE;
 }
 
-function oppositeColor(color){
-	if(color == CELL_WHITE) return CELL_BLACK;
-	if(color == CELL_BLACK) return CELL_WHITE;
-	else return -1;
-}
-
-function isSurroundedBy(i, j, cellColor){
-	if(board.cell[i][j] != oppositeColor(cellColor)){
-		return false;
-	}
-	for(var k = 0; k < 6; k++){
-		var ni = i + diNeighbor[k];
-		var nj = j + djNeighbor[k];
-		if((0 <= ni && ni < board.cellRow) && 0 <= nj && nj < board.cellColumn){
-			if(board.cell[ni][nj] != cellColor){
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-function existSurroundedDiscsBy(cellColor){
-	for(var i = 0; i < board.cellRow; i++){
-		for(var j = 0; j < board.cellColumn; j++){
-			if(isSurroundedBy(i, j, cellColor)){
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-function areNeighbors(i1, j1, i2, j2){
-	for(var k = 0; k < 6; k++){
-		var ni = i1 + diNeighbor[k];
-		var nj = j1 + djNeighbor[k];
-		if(i2 == ni && j2 == nj){
-			return true;
-		}
-	}
-	return false;
-}
-
-function getColorFromState(gameState){
-	switch(gameState){
-		case STATE_WHITE_PLACE:
-		case STATE_WHITE_MOVE:
-		case STATE_WHITE_SURROUND_MOVE:
-		case STATE_WHITE_WINS:
-			return TURN_WHITE;
-		case STATE_BLACK_MOVE:
-		case STATE_BLACK_SURROUND_MOVE:
-		case STATE_BLACK_WINS:
-			return TURN_BLACK;
-		case STATE_NONE:
-		case STATE_DRAW:
-		default:
-			return -1;
-	}
-}
+/** Game input **/
 
 function input(i1, j1, i2, j2){
-	// Special case: first move
-	if(i1 == i2 && j1 == j2 && gameState == STATE_WHITE_PLACE){
+	if(gameState == STATE_WHITE_PLACE){
 		board.cell[i1][j1] = CELL_WHITE;
 		gameState = STATE_BLACK_MOVE;
 	}
 	
-	var playerColor = getColorFromState(gameState);
+	var playerColor = getColorFromState();
 	var oppositePlayerColor = oppositeColor(playerColor);
 	switch(gameState){
 		case STATE_NONE:
@@ -159,8 +99,8 @@ function input(i1, j1, i2, j2){
 				}
 			}
 			break;
-		case STATE_WHITE_WINS:
-		case STATE_BLACK_WINS:
+		case STATE_WHITE_WIN:
+		case STATE_BLACK_WIN:
 			// When wins!
 			break;
 		case STATE_DRAW:
@@ -170,6 +110,100 @@ function input(i1, j1, i2, j2){
 	var winner = checkWinner();
 	if(winner != STATE_NONE){
 		gameState = winner;
+	}
+}
+
+/** Colors **/
+
+function getColorFromState(){
+	switch(gameState){
+		case STATE_WHITE_PLACE:
+		case STATE_WHITE_MOVE:
+		case STATE_WHITE_SURROUND_MOVE:
+		case STATE_WHITE_WIN:
+			return TURN_WHITE;
+		case STATE_BLACK_MOVE:
+		case STATE_BLACK_SURROUND_MOVE:
+		case STATE_BLACK_WIN:
+			return TURN_BLACK;
+		case STATE_NONE:
+		case STATE_DRAW:
+		default:
+			return -1;
+	}
+}
+
+function oppositeColor(color){
+	if(color == CELL_WHITE) return CELL_BLACK;
+	if(color == CELL_BLACK) return CELL_WHITE;
+	else return -1;
+}
+
+/** Neighborhood **/
+
+function isSurroundedBy(i, j, cellColor){
+	if(board.cell[i][j] != oppositeColor(cellColor)){
+		return false;
+	}
+	for(var k = 0; k < 6; k++){
+		var ni = i + diNeighbor[k];
+		var nj = j + djNeighbor[k];
+		if((0 <= ni && ni < board.cellRow) && 0 <= nj && nj < board.cellColumn){
+			if(board.cell[ni][nj] != cellColor){
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+function existSurroundedDiscsBy(cellColor){
+	for(var i = 0; i < board.cellRow; i++){
+		for(var j = 0; j < board.cellColumn; j++){
+			if(isSurroundedBy(i, j, cellColor)){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function areNeighbors(i1, j1, i2, j2){
+	for(var k = 0; k < 6; k++){
+		var ni = i1 + diNeighbor[k];
+		var nj = j1 + djNeighbor[k];
+		if(i2 == ni && j2 == nj){
+			return true;
+		}
+	}
+	return false;
+}
+
+/** Validation **/
+
+function isMovable(i, j){
+	switch(gameState){
+		case STATE_WHITE_MOVE:
+		case STATE_BLACK_MOVE:
+			if(board.cell[i][j] == oppositeColor(getColorFromState())){
+				return true;
+			}else{
+				return false;
+			}
+		case STATE_WHITE_SURROUND_MOVE:
+		case STATE_BLACK_SURROUND_MOVE:
+			if(isSurroundedBy(i, j, getColorFromState())){
+				return true;
+			}else{
+				return false;
+			}
+		case STATE_NONE:
+		case STATE_WHITE_PLACE:
+		case STATE_WHITE_WIN:
+		case STATE_BLACK_WIN:
+		case STATE_DRAW:
+		default:
+			return false;
 	}
 }
 
@@ -203,7 +237,7 @@ function checkWinner(){
 				var m = i1;
 				var n = i2 + (board.cellColumn - 1) * board.cellRow;
 				if(ufdsFind(m) == ufdsFind(n)){
-					return STATE_BLACK_WINS;
+					return STATE_BLACK_WIN;
 				}
 			}
 		}
@@ -216,26 +250,41 @@ function checkWinner(){
 				var m = j1 * board.cellRow;
 				var n = board.cellRow - 1 + j2 * board.cellRow;
 				if(ufdsFind(m) == ufdsFind(n)){
-					return STATE_WHITE_WINS;
+					return STATE_WHITE_WIN;
 				}
 			}
 		}
 	}
 
 	// Check draw
+	/*var whiteCanMove = false;
+	var whiteCanMoveSurrounded = false;
+	var blackCanMove = false;
+	var blackCanMoveSurrounded = false;
 	for(var i = 0; i < board.cellRow; i++){
 		for(var j = 0; j < board.cellColumn; j++){
+			if(isSurroundedBy(i, j, CELL_WHITE)){
+				whiteCanMoveSurrounded = true;
+			}else if(isSurroundedBy(i, j, CELL_BLACK)){
+				blackCanMoveSurrounded = true;
+			}
 			for(var k = 0; k < 6; k++){
 				var ni = i + diNeighbor[k];
 				var nj = j + djNeighbor[k];
-				if((0 <= ni && ni < board.cellRow) && 0 <= nj && nj < board.cellColumn){
-// Do something
+					if(board.cell[i][j] == CELL_BLACK && board.cell[ni][nj] == CELL_EMPTY){
+						whiteCanMove = true;
+					}else if(board.cell[i][j] == CELL_WHITE && board.cell[ni][nj] == CELL_EMPTY){
+						blackCanMove = true;
+					}
 				}
 			}
 		}
-	}
+	}*/
+	
 	return STATE_NONE;
 }
+
+/** Union Find Disjoint Set **/
 
 function ufdsFind(i){
 	if(ufdsParent[i] != i){

@@ -21,8 +21,6 @@ const coordMessage = {
 var coordBoardPolygonX = [0, 0, 0, 0];
 var coordBoardPolygonY = [0, 0, 0, 0];
 
-
-
 function initCoordinates(){
 	calcBoardPolygon();
 }

@@ -11,30 +11,32 @@ var mouse = {
 	x: 0,
 	y: 0
 };
-//
+// Select action
+var isSelected = false;
 var selectedCell = {
 	i: -1,
 	j: -1
 };
-// Dragged disk properties
-var isDiskDragged = false;
+// Drag action
+var isMouseDragging = false;
 var dragStartCell = {
 	i: -1,
 	j: -1
 };
 var dragStartMouse = {
-	x:-1,
-	y:-1
+	x: -1,
+	y: -1
 }
 
 /** Event Initialize **/
+
 function eventInitialize(){
 	var element = document.getElementById("canvasGame");
 	element.addEventListener("mousedown", eventMouseDown);
 	element.addEventListener("mouseup", eventMouseUp);
 	element.addEventListener("mousemove", eventMouseMove);
 	clientCanvasRect = element.getBoundingClientRect();
-
+	
 	initCoordinates();
 	initDraw();
 	initBoard();
@@ -43,12 +45,13 @@ function eventInitialize(){
 }
 
 /** Event Mouse Down **/
+
 function eventMouseDown(evt){
 	updateMouseCoord(evt);
 
 	var cell = getCellFromPosition(mouse);
 	if(cell != null){
-		isDiskDragged = true;
+		isMouseDragging = true;
 		dragStartCell = cell;
 		dragStartMouse = mouse;
 	}
@@ -57,39 +60,62 @@ function eventMouseDown(evt){
 }
 
 /** Event Mouse Up **/
+
 function eventMouseUp(evt){
 	updateMouseCoord(evt);
 
-	if(isDiskDragged){
-		isDiskDragged = false;
+	if(isMouseDragging){
+		isMouseDragging = false;
 		var cell = getCellFromPosition(getDraggedDiskPosition());
-		console.log(cell);
 		if(cell != null){
-			input(dragStartCell.i, dragStartCell.j, cell.i, cell.j);
+			if(dragStartCell.i == cell.i && dragStartCell.j == cell.j){
+				subEventMouseClick(cell);
+			}else{
+				input(dragStartCell.i, dragStartCell.j, cell.i, cell.j);
+				isSelected = false;
+			}
 		}
-		selectedCell = cell;
 	}
 
 	draw();
 }
 
+function subEventMouseClick(cell){
+	if(gameState == STATE_WHITE_WIN || gameState == STATE_BLACK_WIN){
+		initBoard();
+	}else if(gameState == STATE_WHITE_PLACE){
+		input(cell.i, cell.j, cell.i, cell.j);
+		isSelected = false;
+	}else{
+		if(isMovable(cell.i, cell.j)){
+			selectedCell = cell;
+			isSelected = true;
+		}else if(isSelected){
+			if(board.cell[cell.i][cell.j] == CELL_EMPTY){
+				input(selectedCell.i, selectedCell.j, cell.i, cell.j);
+			}
+			isSelected = false;
+		}
+	}
+}
+
 /** Event Mouse Move **/
+
 function eventMouseMove(evt){
 	updateMouseCoord(evt);
 
 	var position;
-	if(isDiskDragged){
+	if(isMouseDragging){
 		position = getDraggedDiskPosition();
 	}else{
 		position = mouse;
 	}
 	var cell = getCellFromPosition(position);
-	if(cell != null){
-		selectedCell = cell;
-	}
 
 	draw();
 }
+
+/** Mouse **/
 
 function updateMouseCoord(evt){
 	var m = {x:-1, y:-1};
@@ -99,6 +125,8 @@ function updateMouseCoord(evt){
 	m.y = (evt.clientY - clientCanvasRect.top) * scaleY;
 	mouse = m;
 }
+
+/** Cell and Position **/
 
 function getDraggedDiskPosition(){
 	var pos = {x:getCellX(dragStartCell.i, dragStartCell.j) + (mouse.x - dragStartMouse.x), y:getCellY(dragStartCell.j, dragStartCell.j) +  (mouse.y - dragStartMouse.y)};

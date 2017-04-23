@@ -4,10 +4,14 @@
 
 var canvas, ctx;
 
+/** Initialization **/
+
 function initDraw(){
 	canvas = document.getElementById("canvasGame");
 	ctx = canvas.getContext("2d");
 }
+
+/** Main draw **/
 
 function draw(){
 	clearCanvas();
@@ -16,6 +20,8 @@ function draw(){
 	drawDisks();
 	drawMessage();
 }
+
+/** Main draw methods **/
 
 function clearCanvas(){
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -66,41 +72,56 @@ function drawBoardBack(){
 }
 
 function drawBoardCells(){
+	ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+	ctx.fillStyle = "rgba(225, 0, 0, 1)";
+	ctx.lineWidth = 2;
 	for(var i = 0; i < board.cellRow; i++){
 		for(var j = 0; j < board.cellColumn; j++){
 			var x = getCellX(i, j);
 			var y = getCellY(i, j);
-			ctx.lineWidth = 4;
-			ctx.strokeStyle = "rgba(255, 255, 255, 1)";
-			ctx.fillStyle = "rgba(225, 0, 0, 1)";
+			pathHexagon(x, y, sizeBoardCell);
+			ctx.fill();
+		}
+	}
+	for(var i = 0; i < board.cellRow; i++){
+		for(var j = 0; j < board.cellColumn; j++){
+			var x = getCellX(i, j);
+			var y = getCellY(i, j);
 			pathHexagon(x, y, sizeBoardCell);
 			ctx.stroke();
-			ctx.fill();
-			
-			//if(isInHexagon(mouse.x, mouse.y, x, y, sizeBoardCell)){
-			if(selectedCell.i == i && selectedCell.j == j){
-				ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-				ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-				pathHexagon(x, y, sizeBoardCell);
-				ctx.fill();
-			}
 		}
+	}
+	ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+	if(isSelected){
+		var x = getCellX(selectedCell.i, selectedCell.j);
+		var y = getCellY(selectedCell.i, selectedCell.j);
+		pathHexagon(x, y, sizeBoardCell);
+		ctx.fill();
+		ctx.stroke();
 	}
 }
 
 function drawDisks(){
+	var colorWhiteDisk = "rgba(255, 255, 255, 1)";
+	var colorBlackDisk = "rgba(0, 0, 0, 1)";
+	if(gameState == STATE_WHITE_WIN){
+		colorBlackDisk = "rgba(0, 0, 0, 0.6)"
+	}else if(gameState == STATE_BLACK_WIN){
+		colorWhiteDisk = "rgba(255, 255, 255, 0.6)";
+	}
+	
 	// Draw static disks
 	for(var i = 0; i < board.cellRow; i++){
 		for(var j = 0; j < board.cellColumn; j++){
-			if(board.cell[i][j] != CELL_EMPTY && (!isDiskDragged || (isDiskDragged && !(dragStartCell.i == i && dragStartCell.j == j)))){
+			if(board.cell[i][j] != CELL_EMPTY && (!isMouseDragging || (isMouseDragging && !(dragStartCell.i == i && dragStartCell.j == j)))){
 				var x = getCellX(i, j);
 				var y = getCellY(i, j);
 			
 				ctx.lineWidth = 4;
 				if(board.cell[i][j] == CELL_BLACK){
-					ctx.fillStyle = "rgba(0, 0, 0, 1)";
+					ctx.fillStyle = colorBlackDisk;
 				}else{
-					ctx.fillStyle = "rgba(255, 255, 255, 1)";
+					ctx.fillStyle = colorWhiteDisk;
 				}
 				ctx.strokeStyle = "rgba(0, 0, 0, 0)";
 				fillDisc(x, y, sizeDisk);
@@ -108,68 +129,65 @@ function drawDisks(){
 		}
 	}
 	// Draw dragged disk
-	if(isDiskDragged && (board.cell[dragStartCell.i][dragStartCell.j] == CELL_BLACK || board.cell[dragStartCell.i][dragStartCell.j] == CELL_WHITE)){
-		var x = getCellX(dragStartCell.i, dragStartCell.j) + (mouse.x - dragStartMouse.x);
-		var y = getCellY(dragStartCell.i, dragStartCell.j) + (mouse.y - dragStartMouse.y);
+	if(isMouseDragging && (board.cell[dragStartCell.i][dragStartCell.j] != CELL_EMPTY)){
+		var x = getCellX(dragStartCell.i, dragStartCell.j);
+		var y = getCellY(dragStartCell.i, dragStartCell.j);
+		if(isMovable(dragStartCell.i, dragStartCell.j)){
+			x += mouse.x - dragStartMouse.x;
+			y += mouse.y - dragStartMouse.y;
+		}
 		if(board.cell[dragStartCell.i][dragStartCell.j] == CELL_BLACK){
-			ctx.fillStyle = "rgba(0, 0, 0, 1)";
+			ctx.fillStyle = colorBlackDisk;
 		}else{
-			ctx.fillStyle = "rgba(255, 255, 255, 1)";
+			ctx.fillStyle = colorWhiteDisk;
 		}
 		fillDisc(x, y, sizeDisk);
-		
 	}
 }
 
 function drawMessage(){
-	ctx.font = "bold 25px Lucida Sans Unicode";
+	ctx.font = "bold 25px Arial";
 	ctx.lineWidth = 0.8;
 	if(1 <= gameState && gameState <= 6){
-		ctx.fillStyle = "rgba(230, 230, 230, 1)";
+		ctx.fillStyle = "rgba(240, 240, 240, 1)";
 		ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-		ctx.fillText(getGameMessage(), 20, 30);
-		ctx.strokeText(getGameMessage(), 20, 30);
+		ctx.fillText(getGameMessage(), 70, 33);
+		ctx.strokeText(getGameMessage(), 70, 33);
 	}else{
 		ctx.fillStyle = "rgba(0, 0, 0, 1)";
 		ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-		ctx.fillText(getGameMessage(), 20, 30);
+		ctx.fillText(getGameMessage(), 70, 33);
 	}
+	ctx.strokeStyle = "rgba(0, 0, 0, .5)";
+	ctx.lineWidth = 2;
+	fillDisc(30, 25, sizeDisk);
 }
 
 function getGameMessage(){
 	switch(gameState){
-		case STATE_NONE:
-			return "Click to start a new game";
-/*		case STATE_WHITE_SELECT:
-			return "White Player: Select a Black disk to move";*/
 		case STATE_WHITE_MOVE:
-			return "White Player: Select an Empty cell to place the Black disk";
+			return "White player: move a Black disk";
 		case STATE_WHITE_PLACE:
-			return "White Player: Select an Empty cell to place a White disk";
-/*		case STATE_WHITE_SURROUND_SELECT:
-			return "White Player: Select a surrounded Black disk to move";*/
+			return "White player: place a White disk";
 		case STATE_WHITE_SURROUND_MOVE:
-			return "White Player: Select an Empty cell to place the Black disk";
-		case STATE_WHITE_WINS:
-			return "White Player Win!";
-/*		case STATE_BLACK_SELECT:
-			return "Black Player: Select a White disk to move";*/
+			return "White player: move a surrounded Black Disk";
+		case STATE_WHITE_WIN:
+			return "White player WIN! Click to start another game";
 		case STATE_BLACK_MOVE:
-			return "Black Player: Select an Empty cell to place the White disk";
-/*		case STATE_BLACK_PLACE:
-			return "Black Player: Select an Empty cell to place a Black disk";*/
-/*		case STATE_BLACK_SURROUND_SELECT:
-			return "Black Player: Select a surrounded White disk to move";*/
+			return "White player: move a White disk";
 		case STATE_BLACK_SURROUND_MOVE:
-			return "Black Player: Select an Empty cell to place the White disk";
-		case STATE_BLACK_WINS:
-			return "Black Player Win!";
+			return "White player: move a surrounded White Disk";
+		case STATE_BLACK_WIN:
+			return "Black player WIN! Click to start another game";
 		case STATE_DRAW:
 			return "Draw Game";
+		case STATE_NONE:
 		default:
 			return "";
 	}
 }
+
+/** Auxiliar drawing methods **/
 
 function drawPolygon(x, y){
 	ctx.beginPath();
@@ -185,6 +203,7 @@ function fillDisc(x, y, size){
 	ctx.arc(x, y, size, 0, 2 * Math.PI, false);
 	ctx.fill();
 	ctx.stroke();
+	ctx.closePath();
 }
 
 function pathHexagon(x, y, size){
@@ -195,4 +214,3 @@ function pathHexagon(x, y, size){
 	}
 	ctx.closePath();
 }
-
