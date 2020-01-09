@@ -119,10 +119,22 @@ function eventMouseMove(evt){
 
 function updateMouseCoord(evt){
 	var m = {x:-1, y:-1};
+
+	m.lastX = mouse.x;
+	m.lastY = mouse.y;
+
+	var clientCanvasRect = canvas.getBoundingClientRect();
 	scaleX = canvas.width / clientCanvasRect.width,
 	scaleY = canvas.height / clientCanvasRect.height;
-	m.x = (evt.clientX - clientCanvasRect.left) * scaleX;
-	m.y = (evt.clientY - clientCanvasRect.top) * scaleY;
+	m.x = Math.round((evt.clientX - clientCanvasRect.left) * scaleX);
+	m.y = Math.round((evt.clientY - clientCanvasRect.top) * scaleY);
+
+	if(evt.buttons == 0){
+		m.clickPressed = false;
+	}else{
+		m.clickPressed = true;
+	}
+	
 	mouse = m;
 }
 
