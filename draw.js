@@ -174,9 +174,9 @@ function getGameMessage(){
 		case STATE_WHITE_WIN:
 			return "White player WIN! Click to start another game";
 		case STATE_BLACK_MOVE:
-			return "White player: move a White disk";
+			return "Black player: move a White disk";
 		case STATE_BLACK_SURROUND_MOVE:
-			return "White player: move a surrounded White Disk";
+			return "Black player: move a surrounded White Disk";
 		case STATE_BLACK_WIN:
 			return "Black player WIN! Click to start another game";
 		case STATE_DRAW:
